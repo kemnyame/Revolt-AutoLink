@@ -1,0 +1,17 @@
+services:
+  revolt-autolink:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      DATABASE_PATH: /app/data/revolt.db
+    volumes:
+      - revolt_data:/app/data
+      - revolt_uploads:/app/uploads
+volumes:
+  revolt_data:
+  revolt_uploads:
