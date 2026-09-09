@@ -1,53 +1,36 @@
-# Revolt AutoLink
-**Find It. Trust It. Drive It.**
+# Revolt AutoLink - Hosting Complete Build
 
-A deployable full-stack vehicle discovery and administration platform.
+This build keeps the approved Revolt AutoLink public design and uses the Node.js + SQLite backend as the operational source of truth.
 
 ## Included
-- Responsive public vehicle marketplace
-- Browse/search, vehicle detail, save and compare interactions
-- Persistent customer enquiries
-- Persistent inspection requests
-- Find-Me-a-Car request API/database
-- Secure admin login with server-side sessions
-- Live admin dashboard
-- Vehicle CRUD and lifecycle status management
-- Enquiry and inspection views
-- Audit log
-- SQLite relational database with indexes and foreign keys
-- REST API suitable for future mobile apps/integrations
-- Docker and Docker Compose deployment files
+- Public vehicle catalogue loaded from the database
+- Separate `/admin.html` dashboard
+- Direct admin access for the current testing phase (no admin authentication gate)
+- Vehicle create/edit/status/delete
+- Multi-photo vehicle upload from Add/Edit Vehicle
+- Uploaded images stored in `/uploads` and linked in the `media` database table
+- About Us content editor in Admin, reflected on the public About page
+- Customer registration/login/profile
+- Enquiries, inspections, Find Me a Car requests, alerts, contacts, customers and audit records
+- Dashboard analytics from live database records
+- Saved and Compare use browser `sessionStorage`, so they clear when the browser/tab session ends
+- Docker/Docker Compose files with persistent `/app/data` and `/app/uploads` volumes
 
-## Requirements
-Node.js 22+ (uses Node's built-in SQLite module).
+## Start locally
+Requires Node.js 22+.
 
-## Local start
-1. Copy `.env.example` values into your shell/environment.
-2. **Change ADMIN_PASSWORD before any public deployment.**
-3. Run: `npm start`
-4. Open: `http://localhost:3000`
+```bash
+npm start
+```
 
-Development fallback login (only when environment variables are not set):
-- Email: `admin@revoltautolink.local`
-- Password: `ChangeMe123!`
+Open:
+- Website: `http://localhost:3000`
+- Admin: `http://localhost:3000/admin.html`
 
-## Docker hosting
-Set `ADMIN_EMAIL` and `ADMIN_PASSWORD`, then run:
-`docker compose up -d --build`
+## Hosting
+Use a Node/Docker host with persistent volumes. The database file is created automatically at `data/revolt.db` on first start. Keep both the database and uploads directories persistent.
 
-Persist `/app/data` and `/app/uploads` using the included named volumes.
+The current Admin dashboard intentionally has direct access as requested. Restore authentication before a public commercial launch.
 
-## Production notes
-The application is hostable as supplied on a Node/Docker host with persistent storage. Before commercial launch, configure HTTPS/reverse proxy, backups, a real domain, transactional email/WhatsApp credentials, object/cloud media storage, monitoring, and secrets in the hosting provider rather than source code. SQLite is appropriate for an initial deployment; for high write concurrency/multi-instance scaling, migrate the schema to PostgreSQL.
-
-## Key API routes
-- `POST /api/auth/login`
-- `GET /api/auth/me`
-- `GET/POST /api/vehicles`
-- `GET/PUT/DELETE /api/vehicles/:id`
-- `GET/POST /api/enquiries`
-- `GET/POST /api/inspections`
-- `POST /api/car-requests`
-- `GET /api/analytics/dashboard`
-- `GET /api/audit`
-- `GET /api/health`
+## Photo limits
+The admin can select up to 12 images per save operation. JPG, PNG and WebP are supported, with a 6 MB limit per image.

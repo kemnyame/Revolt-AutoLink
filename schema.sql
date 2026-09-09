@@ -12,3 +12,5 @@ CREATE TABLE IF NOT EXISTS audit_logs(id INTEGER PRIMARY KEY,user_id INTEGER REF
 CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY,value TEXT,updated_at TEXT);
 CREATE INDEX IF NOT EXISTS idx_vehicle_status ON vehicles(status);CREATE INDEX IF NOT EXISTS idx_vehicle_make ON vehicles(make);CREATE INDEX IF NOT EXISTS idx_enquiry_vehicle ON enquiries(vehicle_id);CREATE INDEX IF NOT EXISTS idx_inspection_vehicle ON inspections(vehicle_id);
 CREATE TABLE IF NOT EXISTS contact_messages(id INTEGER PRIMARY KEY,name TEXT NOT NULL,phone TEXT,email TEXT,message TEXT NOT NULL,status TEXT DEFAULT 'New',created_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS content_blocks(key TEXT PRIMARY KEY,title TEXT,subtitle TEXT,body TEXT,extra_json TEXT,updated_at TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS idx_media_vehicle_sort ON media(vehicle_id,sort_order);
