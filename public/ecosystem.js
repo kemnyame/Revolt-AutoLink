@@ -106,3 +106,18 @@ submitService=async function(e,id){e.preventDefault();try{let d=await customerAp
 checkout=async function(e){e.preventDefault();if(!requireCustomer('account'))return;try{let b=Object.fromEntries(new FormData(e.target));let d=await customerApi('/api/orders',{method:'POST',body:JSON.stringify({...b,items:cart})});if(d.authorization_url){cart=[];cartSave();location.href=d.authorization_url;return}toast(d.message||('Order '+d.order_no+' created'));if(d.id){cart=[];cartSave();route('account')}}catch(x){toast(x.message)}}
 // Put the labelled photography directly under the vehicle heading and remove the repetitive legacy mosaic.
 const _labelledCarPageOrganized=carPage;carPage=function(id){let html=_labelledCarPageOrganized(id);setTimeout(()=>{let details=document.querySelector('.details'),legacy=details?.querySelector(':scope > .gallery'),panel=document.querySelector('.vehicle-photo-panel'),head=document.querySelector('.detail-head');if(legacy)legacy.remove();if(panel&&head)head.insertAdjacentElement('afterend',panel)},30);return html}
+
+// === Vehicle gallery/publication reliability fix ===
+async function hydrateTopVehicleGallery(id){
+  try{
+    const v=await api('/api/vehicles/'+id);
+    const imgs=(v.media||[]).filter(m=>m.type==='image'&&m.category!=='360');
+    const gallery=document.querySelector('.details .gallery');
+    if(!gallery||!imgs.length)return;
+    const ordered=[...imgs].sort((a,b)=>(b.is_primary-a.is_primary)||(a.sort_order-b.sort_order));
+    gallery.innerHTML=ordered.slice(0,5).map((m,i)=>`<button type="button" class="detail-gallery-photo" onclick="openVehicleMedia(${id},${m.id})" aria-label="Open ${esc(m.category||'vehicle')} photo"><img src="${m.path}" alt="${esc(m.category||'Vehicle photo')}">${m.is_primary?'<span class="display-photo-tag">Display Photo</span>':''}</button>`).join('');
+    gallery.classList.toggle('single-photo',ordered.length===1);
+  }catch(e){console.warn('Top gallery refresh failed',e)}
+}
+const _carPageTopGallery=carPage;
+carPage=function(id){const html=_carPageTopGallery(id);setTimeout(()=>hydrateTopVehicleGallery(id),0);return html}

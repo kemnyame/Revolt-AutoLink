@@ -41,14 +41,135 @@ if(!db.prepare('SELECT count(*) n FROM vehicles').get().n){const ins=db.prepare(
 ['2020 Kia Sportage EX','Kia','Sportage',2020,168000,'Takoradi',68000,'Automatic','Petrol','2.4L','SUV','Red','Locally Used','Available','PRICE REDUCED','Value-focused SUV with useful comfort features.','Leather seats|Bluetooth|Reverse camera','Review maintenance history.',0]
 ].forEach(v=>ins.run(...v,now(),now()));}}
 seed();
+// Give the original demonstration vehicles a proper multi-angle gallery when they have no uploaded photography yet.
+// Admin uploads always remain authoritative and can replace/set the Browse Cars display photo.
+try{
+ const demoMedia={
+  1:[['front','https://images.unsplash.com/photo-1623869675781-80aa31012a5a?auto=format&fit=crop&w=1400&q=85'],['back','https://images.unsplash.com/photo-1550355291-bbee04a92027?auto=format&fit=crop&w=1400&q=85'],['interior_front','https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=1400&q=85']],
+  2:[['front','https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1400&q=85'],['left','https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=1400&q=85'],['interior_front','https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1400&q=85']],
+  3:[['front','https://images.unsplash.com/photo-1609521263047-f8f205293f24?auto=format&fit=crop&w=1400&q=85'],['right','https://images.unsplash.com/photo-1542362567-b07e54358753?auto=format&fit=crop&w=1400&q=85'],['interior_front','https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&fit=crop&w=1400&q=85']],
+  4:[['front','https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=1400&q=85'],['left','https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=1400&q=85']],
+  5:[['front','https://images.unsplash.com/photo-1581540222194-0def2dda95b8?auto=format&fit=crop&w=1400&q=85'],['back','https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=1400&q=85'],['interior_front','https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1400&q=85']],
+  6:[['front','https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=1400&q=85'],['right','https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?auto=format&fit=crop&w=1400&q=85'],['interior_front','https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=1400&q=85']]
+ };
+ const add=db.prepare('INSERT INTO media(vehicle_id,type,category,path,is_primary,sort_order,created_at) VALUES(?,?,?,?,?,?,?)');
+ for(const [id,items] of Object.entries(demoMedia)){
+   const exists=db.prepare("SELECT count(*) n FROM media WHERE vehicle_id=? AND type='image' AND category!='360'").get(+id).n;
+   if(!exists && db.prepare('SELECT id FROM vehicles WHERE id=?').get(+id)) items.forEach((x,i)=>add.run(+id,'image',x[0],x[1],i===0?1:0,i,now()));
+ }
+}catch(e){console.warn('Demo vehicle media seed skipped:',e.message)}
+
+// REVOLT DEMO CATALOGUE EXPANSION: ensure the demo catalogue contains 15 public vehicles.
+// This runs safely on existing Railway databases and does not duplicate titles already present.
+try {
+ const demoCars = [
+ ['2022 Lexus RX 350','Lexus','RX 350',2022,410000,'Accra',33000,'Automatic','Petrol','3.5L','SUV','Pearl White','Foreign Used','Available','VERIFIED','Refined premium SUV with a quiet, comfortable cabin.','Leather seats|Reverse camera|Keyless entry','Demo catalogue vehicle.',1],
+ ['2021 BMW X3 xDrive30i','BMW','X3',2021,365000,'Accra',44000,'Automatic','Petrol','2.0L Turbo','SUV','Black','Foreign Used','Available','PREMIUM','Compact luxury SUV with responsive performance.','Leather seats|Sunroof|Apple CarPlay','Demo catalogue vehicle.',1],
+ ['2022 Ford Explorer XLT','Ford','Explorer',2022,395000,'Tema',49000,'Automatic','Petrol','2.3L Turbo','SUV','Grey','Foreign Used','Available','FAMILY SUV','Spacious three-row SUV suited to family use.','3-row seating|Reverse camera|Cruise control','Demo catalogue vehicle.',0],
+ ['2020 Nissan Rogue SV','Nissan','Rogue',2020,195000,'Accra',61000,'Automatic','Petrol','2.5L','SUV','Blue','Foreign Used','Available','GOOD VALUE','Practical crossover with useful everyday features.','Push start|Bluetooth|Reverse camera','Demo catalogue vehicle.',0],
+ ['2023 Honda CR-V EX','Honda','CR-V',2023,345000,'Kumasi',29000,'Automatic','Petrol','1.5L Turbo','SUV','White','Foreign Used','Available','NEW ARRIVAL','Comfortable and efficient family crossover.','Apple CarPlay|Cruise control|Reverse camera','Demo catalogue vehicle.',1],
+ ['2021 Toyota Camry SE','Toyota','Camry',2021,235000,'Tema',52000,'Automatic','Petrol','2.5L','Sedan','Red','Foreign Used','Available','VERIFIED','Popular midsize sedan with sporty SE trim.','Reverse camera|Bluetooth|Cruise control','Demo catalogue vehicle.',1],
+ ['2022 Hyundai Elantra SEL','Hyundai','Elantra',2022,175000,'Accra',41000,'Automatic','Petrol','2.0L','Sedan','Silver','Foreign Used','Available','GOOD VALUE','Modern compact sedan with strong fuel economy.','Apple CarPlay|Reverse camera|Keyless entry','Demo catalogue vehicle.',0],
+ ['2021 Kia Sorento EX','Kia','Sorento',2021,285000,'Kumasi',56000,'Automatic','Petrol','2.5L','SUV','Dark Grey','Foreign Used','Available','FAMILY SUV','Versatile SUV with a comfortable multi-row cabin.','Leather seats|Parking sensors|Push start','Demo catalogue vehicle.',0],
+ ['2023 Volkswagen Tiguan SE','Volkswagen','Tiguan',2023,315000,'Accra',26000,'Automatic','Petrol','2.0L Turbo','SUV','White','Foreign Used','Available','NEW ARRIVAL','European compact SUV with modern cabin technology.','Apple CarPlay|Digital display|Reverse camera','Demo catalogue vehicle.',1]
+ ];
+ const insDemo=db.prepare(`INSERT INTO vehicles(title,make,model,year,price,location,mileage,transmission,fuel,engine,body_type,color,condition,status,label,description,highlights,notes,featured,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
+ for(const v of demoCars){ if(!db.prepare('SELECT id FROM vehicles WHERE title=?').get(v[0])) insDemo.run(...v,now(),now()); }
+ const galleryUrls=[
+  'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1504215680853-026ed2a45def?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1493238792000-8113da705763?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1515569067071-ec3b51335dd0?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1525609004556-c46c7d6cf023?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1542362567-b07e54358753?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1550355291-bbee04a92027?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1553440569-bcc63803a83d?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1623869675781-80aa31012a5a?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1581540222194-0def2dda95b8?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1609521263047-f8f205293f24?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1400&q=85'
+ ];
+ const addMedia=db.prepare('INSERT INTO media(vehicle_id,type,category,path,is_primary,sort_order,created_at) VALUES(?,?,?,?,?,?,?)');
+ demoCars.forEach((v,idx)=>{
+   const car=db.prepare('SELECT id FROM vehicles WHERE title=?').get(v[0]); if(!car) return;
+   const count=db.prepare("SELECT count(*) n FROM media WHERE vehicle_id=? AND type='image' AND category!='360'").get(car.id).n;
+   if(!count){ const base=idx*3; ['front','back','interior_front'].forEach((cat,j)=>addMedia.run(car.id,'image',cat,galleryUrls[(base+j)%galleryUrls.length],j===0?1:0,j,now())); }
+ });
+}catch(e){console.warn('15-car demo catalogue expansion skipped:',e.message)}
+
+// Populate the 15 demonstration listings with 360 frames, walkaround video and engine-start audio.
+// These demo assets are only used when the corresponding media type has not already been uploaded by Admin.
+try{
+ const demoTitles=[
+  '2024 Toyota Corolla LE','2023 Mercedes-Benz C300','2022 Hyundai Tucson','2021 Honda Civic Touring','2023 Toyota RAV4 XLE','2020 Kia Sportage EX',
+  '2022 Lexus RX 350','2021 BMW X3 xDrive30i','2022 Ford Explorer XLT','2020 Nissan Rogue SV','2023 Honda CR-V EX','2021 Toyota Camry SE','2022 Hyundai Elantra SEL','2021 Kia Sorento EX','2023 Volkswagen Tiguan SE'
+ ];
+ const frames=[
+  'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1504215680853-026ed2a45def?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1493238792000-8113da705763?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1525609004556-c46c7d6cf023?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1542362567-b07e54358753?auto=format&fit=crop&w=1400&q=85'
+ ];
+ const addDemoMedia=db.prepare('INSERT INTO media(vehicle_id,type,category,path,is_primary,sort_order,created_at) VALUES(?,?,?,?,?,?,?)');
+ demoTitles.forEach((title,idx)=>{
+   const car=db.prepare('SELECT id FROM vehicles WHERE title=?').get(title); if(!car)return;
+   const n360=db.prepare("SELECT count(*) n FROM media WHERE vehicle_id=? AND type='image' AND category='360'").get(car.id).n;
+   if(!n360){ for(let j=0;j<8;j++) addDemoMedia.run(car.id,'image','360',frames[(idx+j)%frames.length],0,100+j,now()); }
+   if(!db.prepare("SELECT 1 FROM media WHERE vehicle_id=? AND type='video'").get(car.id)) addDemoMedia.run(car.id,'video','walkaround','/demo-media/walkaround-demo.mp4',0,200,now());
+   if(!db.prepare("SELECT 1 FROM media WHERE vehicle_id=? AND type='audio'").get(car.id)) addDemoMedia.run(car.id,'audio','engine_sound','/demo-media/engine-start-demo.mp3',0,201,now());
+ });
+}catch(e){console.warn('Demo 360/video/audio population skipped:',e.message)}
+
 if(!db.prepare("SELECT 1 FROM content_blocks WHERE key='terms'").get()) db.prepare('INSERT INTO content_blocks(key,title,subtitle,body,extra_json,updated_at) VALUES(?,?,?,?,?,?)').run('terms','Terms & Conditions','REVOLT AUTOLINK','By using Revolt AutoLink, you agree to use vehicle, store, service and communication features responsibly. Vehicle information should be independently verified during inspection. Payments, delivery and service fulfilment are subject to confirmation.', '[]', now());
 if(!db.prepare('SELECT count(*) n FROM services').get().n){const q=db.prepare('INSERT INTO services(name,description,price_from,icon,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?)');[['Engine Tuning','Performance diagnostics and engine tuning.',500,'⚙'],['Repairs','Mechanical and electrical repair coordination.',250,'🔧'],['Customisations','Interior, exterior and performance customisation.',500,'✨'],['General Maintenance','Routine servicing, fluids, filters and checks.',200,'🛠'],['Car Insurance','Insurance support and quotation requests.',0,'🛡'],['Vehicle Detailing','Interior and exterior detailing packages.',250,'◈']].forEach(x=>q.run(...x,'Active',now(),now()))}
 if(!db.prepare('SELECT count(*) n FROM products').get().n){const q=db.prepare('INSERT INTO products(name,category,description,price,stock,image,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)');[['Premium Engine Oil','Maintenance','High quality engine oil for routine servicing.',420,20,''],['Brake Pad Set','Brakes','Front brake pad replacement set.',650,12,''],['Car Care Kit','Detailing','Wash, polish and interior care essentials.',350,25,''],['LED Headlight Pair','Lighting','Bright replacement LED headlight pair.',780,8,'']].forEach(x=>q.run(...x,'Active',now(),now()))}
 
+// REVOLT PARTS DEMO CATALOGUE: maintain at least 15 useful store products on existing databases.
+try{
+ const demoProducts=[
+ ['Premium Engine Oil 5W-30','Maintenance','Fully synthetic engine oil for routine servicing.',420,20,'engine-oil.svg'],
+ ['Front Brake Pad Set','Brakes','Replacement front brake pad set for compatible vehicles.',650,12,'brake-pads.svg'],
+ ['Car Care & Detailing Kit','Detailing','Wash, polish and interior-care essentials.',350,25,'car-care.svg'],
+ ['LED Headlight Pair','Lighting','Bright replacement LED headlight pair.',780,8,'headlight.svg'],
+ ['12V Car Battery','Electrical','Reliable automotive starter battery.',1250,10,'battery.svg'],
+ ['Engine Air Filter','Filters','Replacement engine intake air filter.',180,30,'air-filter.svg'],
+ ['Cabin Air Filter','Filters','Cabin filter for cleaner interior airflow.',160,28,'cabin-filter.svg'],
+ ['Oil Filter','Filters','Spin-on engine oil filter for routine service.',95,40,'oil-filter.svg'],
+ ['Spark Plug Set','Ignition','Set of four replacement spark plugs.',320,22,'spark-plugs.svg'],
+ ['Wiper Blade Pair','Exterior','All-weather front windscreen wiper blades.',210,26,'wipers.svg'],
+ ['Tyre Inflator 12V','Accessories','Portable 12V tyre inflator with pressure gauge.',390,16,'inflator.svg'],
+ ['Car Phone Holder','Accessories','Adjustable dashboard and vent phone mount.',145,35,'phone-holder.svg'],
+ ['Jumper Cable Set','Emergency','Heavy-duty booster cables for emergency starts.',280,18,'jumper-cables.svg'],
+ ['Coolant 4L','Fluids','Ready-mix engine coolant for cooling-system maintenance.',190,24,'coolant.svg'],
+ ['Microfibre Cleaning Towels','Detailing','Soft reusable microfibre towels for vehicle care.',120,50,'microfiber.svg']
+ ];
+ const q=db.prepare('INSERT INTO products(name,category,description,price,stock,image,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)');
+ for(const x of demoProducts){ if(!db.prepare("SELECT id FROM products WHERE name=? AND status!='Deleted'").get(x[0])) q.run(x[0],x[1],x[2],x[3],x[4],'/demo-parts/'+x[5],'Active',now(),now()); }
+}catch(e){console.warn('Demo parts population skipped:',e.message)}
+
 if(!db.prepare("SELECT 1 FROM content_blocks WHERE key='about'").get()){db.prepare('INSERT INTO content_blocks(key,title,subtitle,body,extra_json,updated_at) VALUES(?,?,?,?,?,?)').run('about','We help you find the right car.','ABOUT REVOLT AUTOLINK','Revolt AutoLink professionally presents vehicles sourced from a growing network, helps customers compare options and coordinates inspections while keeping the vehicle at the centre of the experience.',JSON.stringify([{title:'Discover',body:'Search quality vehicle listings with useful specifications and media.'},{title:'Understand',body:'See the highlights, important notes and vehicle information before visiting.'},{title:'Inspect',body:'Request an inspection and let our team coordinate the physical visit.'},{title:'Decide',body:'Compare your shortlist and deal with the actual seller when you are ready.'}]),now())}
 function token(req){let a=req.headers.authorization||'';return a.startsWith('Bearer ')?a.slice(7):''}function user(req){let t=token(req);if(!t)return null;return db.prepare('SELECT u.id,u.name,u.email,u.role FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token=? AND s.expires_at>?').get(t,now())||null}
 function audit(u,action,entity,id,details=''){db.prepare('INSERT INTO audit_logs(user_id,action,entity,entity_id,details,created_at) VALUES(?,?,?,?,?,?)').run(u?.id||null,action,entity,String(id||''),details,now())}
-function vehicleRows(where='1=1',params=[]){return db.prepare(`SELECT v.*, (SELECT path FROM media m WHERE m.vehicle_id=v.id AND m.type='image' ORDER BY m.is_primary DESC,m.sort_order LIMIT 1) image, (SELECT count(*) FROM favourites f WHERE f.vehicle_id=v.id) saves, (SELECT count(*) FROM enquiries e WHERE e.vehicle_id=v.id) enquiries FROM vehicles v WHERE ${where} ORDER BY v.featured DESC,v.created_at DESC`).all(...params)}
+function vehicleRows(where='1=1',params=[]){return db.prepare(`SELECT v.*, (SELECT path FROM media m WHERE m.vehicle_id=v.id AND m.type='image' AND m.category!='360' ORDER BY m.is_primary DESC,m.sort_order LIMIT 1) image, (SELECT count(*) FROM favourites f WHERE f.vehicle_id=v.id) saves, (SELECT count(*) FROM enquiries e WHERE e.vehicle_id=v.id) enquiries FROM vehicles v WHERE ${where} ORDER BY v.featured DESC,v.created_at DESC`).all(...params)}
 function oauthFinish(res,provider,providerId,email,name){email=String(email||'').toLowerCase();let x=db.prepare('SELECT * FROM users WHERE email=?').get(email);if(!x){let r=db.prepare('INSERT INTO users(name,email,password_hash,role,created_at) VALUES(?,?,?,?,?)').run(name,email,hash(crypto.randomBytes(32).toString('hex')),'customer',now());x=db.prepare('SELECT * FROM users WHERE id=?').get(r.lastInsertRowid);db.prepare('INSERT OR IGNORE INTO customers(name,phone,email,created_at) VALUES(?,?,?,?)').run(name,'',email,now())}db.prepare('INSERT INTO oauth_accounts(user_id,provider,provider_id,created_at) VALUES(?,?,?,?) ON CONFLICT(provider,provider_id) DO UPDATE SET user_id=excluded.user_id').run(x.id,provider,providerId,now());let t=crypto.randomBytes(32).toString('hex'),exp=new Date(Date.now()+30*864e5).toISOString();db.prepare('INSERT INTO sessions(token,user_id,expires_at,created_at) VALUES(?,?,?,?)').run(t,x.id,exp,now());let payload=Buffer.from(JSON.stringify({token:t,user:{id:x.id,name:x.name,email:x.email,phone:'',role:'customer'}})).toString('base64url');res.writeHead(302,{location:'/?oauth='+payload+'#account'});res.end()}
 
 function setting(k,def=''){let x=db.prepare('SELECT value FROM settings WHERE key=?').get(k);return x?.value||def}
@@ -87,9 +208,9 @@ if(p==='/api/customer/register'&&method==='POST'){let b=await parseBody(req),ema
 if(p==='/api/customer/login'&&method==='POST'){let b=await parseBody(req),x=db.prepare("SELECT * FROM users WHERE email=? AND role='customer' AND active=1").get((b.email||'').trim().toLowerCase());if(!x||!verify(b.password||'',x.password_hash))return json(res,401,{error:'Invalid email or password'});let t=crypto.randomBytes(32).toString('hex'),exp=new Date(Date.now()+30*864e5).toISOString();db.prepare('INSERT INTO sessions(token,user_id,expires_at,created_at) VALUES(?,?,?,?)').run(t,x.id,exp,now());let c=db.prepare('SELECT phone FROM customers WHERE email=?').get(x.email);return json(res,200,{token:t,user:{id:x.id,name:x.name,email:x.email,phone:c?.phone||'',role:x.role}})}
 if(p==='/api/customer/profile'&&method==='GET'){if(!u||u.role!=='customer')return json(res,401,{error:'Unauthorized'});let c=db.prepare('SELECT phone FROM customers WHERE email=?').get(u.email);return json(res,200,{...u,phone:c?.phone||''})}
 if(p==='/api/customer/profile'&&method==='PUT'){if(!u||u.role!=='customer')return json(res,401,{error:'Unauthorized'});let b=await parseBody(req);db.prepare('UPDATE users SET name=? WHERE id=?').run(b.name||u.name,u.id);db.prepare('INSERT INTO customers(name,phone,email,created_at) VALUES(?,?,?,?) ON CONFLICT(email) DO UPDATE SET name=excluded.name,phone=excluded.phone').run(b.name||u.name,b.phone||'',u.email,now());return json(res,200,{id:u.id,name:b.name||u.name,email:u.email,phone:b.phone||'',role:u.role})}
-if(p==='/api/vehicles'&&method==='GET'){let q=url.searchParams.get('q')||'',status=url.searchParams.get('status')||'Available',admin=url.searchParams.get('admin')==='1';let w=admin?'1=1':'status IN (\'Available\',\'Reserved\')',params=[];if(q){w+=' AND (title LIKE ? OR make LIKE ? OR model LIKE ? OR location LIKE ?)';params.push(...Array(4).fill('%'+q+'%'))}return json(res,200,vehicleRows(w,params))}
+if(p==='/api/vehicles'&&method==='GET'){let q=url.searchParams.get('q')||'',status=url.searchParams.get('status')||'Available',admin=url.searchParams.get('admin')==='1';let w=admin?'1=1':"TRIM(LOWER(status)) IN ('available','reserved')",params=[];if(q){w+=' AND (title LIKE ? OR make LIKE ? OR model LIKE ? OR location LIKE ?)';params.push(...Array(4).fill('%'+q+'%'))}return json(res,200,vehicleRows(w,params))}
 let vm=p.match(/^\/api\/vehicles\/(\d+)$/);if(vm&&method==='GET'){let v=vehicleRows('v.id=?',[+vm[1]])[0];if(!v)return json(res,404,{error:'Not found'});db.prepare('UPDATE vehicles SET views=views+1 WHERE id=?').run(v.id);v.media=db.prepare('SELECT * FROM media WHERE vehicle_id=? ORDER BY sort_order').all(v.id);return json(res,200,v)}
-if(p==='/api/vehicles'&&method==='POST'){let b=await parseBody(req);let r=db.prepare(`INSERT INTO vehicles(title,make,model,year,price,location,mileage,transmission,fuel,engine,body_type,color,condition,status,label,description,highlights,notes,featured,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(b.title||'',b.make||'',b.model||'',+b.year||0,+b.price||0,b.location||'',+b.mileage||0,b.transmission||'',b.fuel||'',b.engine||'',b.body_type||'',b.color||'',b.condition||'',b.status||'Draft',b.label||'',b.description||'',b.highlights||'',b.notes||'',b.featured?1:0,now(),now());audit(u,'create','vehicle',r.lastInsertRowid,b.title);return json(res,201,{id:Number(r.lastInsertRowid)})}
+if(p==='/api/vehicles'&&method==='POST'){let b=await parseBody(req);let r=db.prepare(`INSERT INTO vehicles(title,make,model,year,price,location,mileage,transmission,fuel,engine,body_type,color,condition,status,label,description,highlights,notes,featured,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(b.title||'',b.make||'',b.model||'',+b.year||0,+b.price||0,b.location||'',+b.mileage||0,b.transmission||'',b.fuel||'',b.engine||'',b.body_type||'',b.color||'',b.condition||'',(b.status&&String(b.status).trim())||'Available',b.label||'',b.description||'',b.highlights||'',b.notes||'',b.featured?1:0,now(),now());audit(u,'create','vehicle',r.lastInsertRowid,b.title);return json(res,201,{id:Number(r.lastInsertRowid)})}
 if(vm&&method==='PUT'){let b=await parseBody(req),id=+vm[1];let old=db.prepare('SELECT * FROM vehicles WHERE id=?').get(id);if(!old)return json(res,404,{error:'Not found'});let keys=['title','make','model','year','price','location','mileage','transmission','fuel','engine','body_type','color','condition','status','label','description','highlights','notes','featured'];for(let k of keys)if(b[k]!==undefined)old[k]=b[k];db.prepare(`UPDATE vehicles SET title=?,make=?,model=?,year=?,price=?,location=?,mileage=?,transmission=?,fuel=?,engine=?,body_type=?,color=?,condition=?,status=?,label=?,description=?,highlights=?,notes=?,featured=?,updated_at=? WHERE id=?`).run(...keys.map(k=>old[k]),now(),id);audit(u,'update','vehicle',id);return json(res,200,{ok:true})}
 if(vm&&method==='DELETE'){db.prepare('DELETE FROM vehicles WHERE id=?').run(+vm[1]);audit(u,'delete','vehicle',+vm[1]);return json(res,200,{ok:true})}
 if(p==='/api/enquiries'&&method==='POST'){if(!u||u.role!=='customer')return json(res,401,{error:'Please sign in before making an enquiry'});let b=await parseBody(req);let r=db.prepare('INSERT INTO enquiries(vehicle_id,name,phone,email,contact_method,message,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)').run(b.vehicle_id||null,b.name,b.phone,b.email||u.email,b.contact_method||'WhatsApp',b.message||'','New',now(),now()),id=Number(r.lastInsertRowid),cid=requestConversation(u,'enquiry',id,'Vehicle enquiry #'+id,'Your vehicle enquiry has been received. Reply here and the Revolt team will respond.');notifyRequest(u,'vehicle enquiry',id,b.message);return json(res,201,{id,conversation_id:cid})}
@@ -108,7 +229,7 @@ let ia=p.match(/^\/api\/inspections\/(\d+)\/approve$/);if(ia&&method==='POST'){i
 let im=p.match(/^\/api\/inspections\/(\d+)\/status$/);if(im&&method==='PUT'){let b=await parseBody(req);db.prepare('UPDATE inspections SET status=?,updated_at=? WHERE id=?').run(b.status||'Pending',now(),+im[1]);return json(res,200,{ok:true})}
 if(p==='/api/content/about'&&method==='GET'){let x=db.prepare("SELECT * FROM content_blocks WHERE key='about'").get();if(!x)return json(res,404,{error:'About content not found'});try{x.items=JSON.parse(x.extra_json||'[]')}catch{x.items=[]}return json(res,200,x)}
 if((p==='/api/content/about'||p==='/api/content/terms')&&method==='PUT'){let b=await parseBody(req);let extra=JSON.stringify(Array.isArray(b.items)?b.items:[]);db.prepare("INSERT INTO content_blocks(key,title,subtitle,body,extra_json,updated_at) VALUES('about',?,?,?,?,?) ON CONFLICT(key) DO UPDATE SET title=excluded.title,subtitle=excluded.subtitle,body=excluded.body,extra_json=excluded.extra_json,updated_at=excluded.updated_at").run(b.title||'',b.subtitle||'',b.body||'',extra,now());audit(u,'update','content','about');return json(res,200,{ok:true})}
-let mm=p.match(/^\/api\/vehicles\/(\d+)\/media$/);if(mm&&method==='POST'){let b=await parseBody(req),id=+mm[1];if(!db.prepare('SELECT id FROM vehicles WHERE id=?').get(id))return json(res,404,{error:'Vehicle not found'});let files=Array.isArray(b.files)?b.files:[];if(!files.length)return json(res,400,{error:'No media supplied'});let current=db.prepare('SELECT count(*) n FROM media WHERE vehicle_id=?').get(id).n,saved=[];for(let i=0;i<files.length;i++){let f=files[i]||{},m=String(f.data||'').match(/^data:(image\/(?:jpeg|png|webp)|video\/(?:mp4|webm)|audio\/(?:mpeg|mp3|wav|ogg));base64,(.+)$/);if(!m)continue;let mime=m[1],type=mime.startsWith('image/')?'image':mime.startsWith('video/')?'video':'audio',ext=mime.includes('png')?'png':mime.includes('webp')?'webp':mime.includes('webm')?'webm':mime.includes('wav')?'wav':mime.includes('ogg')?'ogg':mime.includes('mpeg')||mime.includes('mp3')?'mp3':mime.includes('mp4')?'mp4':'jpg',buf=Buffer.from(m[2],'base64'),limit=type==='image'?8*1024*1024:60*1024*1024;if(buf.length>limit)continue;let name=`vehicle-${id}-${Date.now()}-${i}.${ext}`,disk=path.join(UPLOADS,name);fs.writeFileSync(disk,buf);let publicPath='/uploads/'+name;if(type==='image'&&f.is_primary===true)db.prepare("UPDATE media SET is_primary=0 WHERE vehicle_id=? AND type='image'").run(id);let r=db.prepare('INSERT INTO media(vehicle_id,type,category,path,is_primary,sort_order,created_at) VALUES(?,?,?,?,?,?,?)').run(id,type,f.category||type,publicPath,(type==='image'&&(f.is_primary===true||(current===0&&i===0)))?1:0,current+i,now());saved.push({id:Number(r.lastInsertRowid),path:publicPath,type,category:f.category||type})}audit(u,'upload','vehicle_media',id,`${saved.length} media file(s)`);return json(res,201,{files:saved})}
+let mm=p.match(/^\/api\/vehicles\/(\d+)\/media$/);if(mm&&method==='POST'){let b=await parseBody(req),id=+mm[1];if(!db.prepare('SELECT id FROM vehicles WHERE id=?').get(id))return json(res,404,{error:'Vehicle not found'});let files=Array.isArray(b.files)?b.files:[];if(!files.length)return json(res,400,{error:'No media supplied'});let current=db.prepare('SELECT count(*) n FROM media WHERE vehicle_id=?').get(id).n,currentImages=db.prepare("SELECT count(*) n FROM media WHERE vehicle_id=? AND type='image' AND category!='360'").get(id).n,saved=[];for(let i=0;i<files.length;i++){let f=files[i]||{},m=String(f.data||'').match(/^data:(image\/(?:jpeg|png|webp)|video\/(?:mp4|webm)|audio\/(?:mpeg|mp3|wav|ogg));base64,(.+)$/);if(!m)continue;let mime=m[1],type=mime.startsWith('image/')?'image':mime.startsWith('video/')?'video':'audio',ext=mime.includes('png')?'png':mime.includes('webp')?'webp':mime.includes('webm')?'webm':mime.includes('wav')?'wav':mime.includes('ogg')?'ogg':mime.includes('mpeg')||mime.includes('mp3')?'mp3':mime.includes('mp4')?'mp4':'jpg',buf=Buffer.from(m[2],'base64'),limit=type==='image'?8*1024*1024:60*1024*1024;if(buf.length>limit)continue;let name=`vehicle-${id}-${Date.now()}-${i}.${ext}`,disk=path.join(UPLOADS,name);fs.writeFileSync(disk,buf);let publicPath='/uploads/'+name;if(type==='image'&&f.is_primary===true)db.prepare("UPDATE media SET is_primary=0 WHERE vehicle_id=? AND type='image'").run(id);let r=db.prepare('INSERT INTO media(vehicle_id,type,category,path,is_primary,sort_order,created_at) VALUES(?,?,?,?,?,?,?)').run(id,type,f.category||type,publicPath,(type==='image'&&f.category!=='360'&&(f.is_primary===true||(currentImages===0&&!saved.some(x=>x.type==='image'&&x.category!=='360'))))?1:0,current+i,now());saved.push({id:Number(r.lastInsertRowid),path:publicPath,type,category:f.category||type})}audit(u,'upload','vehicle_media',id,`${saved.length} media file(s)`);return json(res,201,{files:saved})}
 let md=p.match(/^\/api\/media\/(\d+)$/);if(md&&method==='PUT'){let m=db.prepare('SELECT * FROM media WHERE id=?').get(+md[1]);if(!m)return json(res,404,{error:'Media not found'});let b=await parseBody(req);if(b.is_primary){db.prepare("UPDATE media SET is_primary=0 WHERE vehicle_id=? AND type='image'").run(m.vehicle_id);db.prepare('UPDATE media SET is_primary=1 WHERE id=?').run(m.id)}if(b.category)db.prepare('UPDATE media SET category=? WHERE id=?').run(b.category,m.id);return json(res,200,{ok:true})}if(md&&method==='DELETE'){let m=db.prepare('SELECT * FROM media WHERE id=?').get(+md[1]);if(!m)return json(res,404,{error:'Media not found'});if(m.path&&m.path.startsWith('/uploads/')){let f=path.join(UPLOADS,path.basename(m.path));try{fs.unlinkSync(f)}catch{}}db.prepare('DELETE FROM media WHERE id=?').run(+md[1]);return json(res,200,{ok:true})}
 
 if(p==='/api/admin/roles'&&method==='GET'){if(!u||u.role==='customer')return json(res,401,{error:'Admin login required'});return json(res,200,db.prepare('SELECT * FROM admin_roles ORDER BY name').all().map(x=>({...x,permissions:JSON.parse(x.permissions||'[]')})))}
