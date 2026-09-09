@@ -3,7 +3,7 @@ let cart=JSON.parse(sessionStorage.getItem('revoltCart')||'[]');
 const cartSave=()=>sessionStorage.setItem('revoltCart',JSON.stringify(cart));
 function navClose(){document.getElementById('nav')?.classList.remove('open')}
 function addCart(id){let x=cart.find(i=>i.id===id);if(x)x.qty++;else cart.push({id,qty:1});cartSave();toast('Added to cart');renderRoute()}
-async function storePage(){return `<section class="section"><div class="section-head"><div><h2>Auto Parts Store</h2><p>Parts and essentials in the same Revolt AutoLink experience.</p></div><button class="btn dark" onclick="route('cart')">Cart (${cart.reduce((a,x)=>a+x.qty,0)})</button></div><div id="storeGrid" class="store-grid"><div class="panel">Loading products…</div></div></section>`}
+function storePage(){return `<section class="section"><div class="section-head"><div><h2>Auto Parts Store</h2><p>Parts and essentials in the same Revolt AutoLink experience.</p></div><button class="btn dark" onclick="route('cart')">Cart (${cart.reduce((a,x)=>a+x.qty,0)})</button></div><div id="storeGrid" class="store-grid"><div class="panel">Loading products…</div></div></section>`}
 async function hydrateStore(){try{let d=await api('/api/products');let e=document.getElementById('storeGrid');if(e)e.innerHTML=d.filter(x=>x.status==='Active').map(x=>`<article class="product-card">${x.image?`<img src="${x.image}">`:`<div class="product-placeholder">AUTO PARTS</div>`}<div class="car-body"><span class="chip">${x.category||'Parts'}</span><h3>${x.name}</h3><p class="meta">${x.description||''}</p><div class="price">${money(x.price)}</div><p class="meta">${x.stock} in stock</p><button class="btn primary" onclick="addCart(${x.id})">Add to Cart</button></div></article>`).join('')||'<div class="empty">Products will appear here when added by Admin.</div>'}catch(e){toast(e.message)}}
 function cartPage(){return `<section class="section"><div class="section-head"><div><h2>Your Cart</h2><p>Secure checkout architecture for Mobile Money and cards.</p></div></div><div id="cartBox" class="panel">Loading…</div></section>`}
 async function hydrateCart(){let products=await api('/api/products'),rows=cart.map(i=>{let p=products.find(x=>x.id===i.id);return p?{...p,qty:i.qty}:null}).filter(Boolean),total=rows.reduce((a,x)=>a+x.price*x.qty,0),box=document.getElementById('cartBox');if(!box)return;box.innerHTML=rows.length?`${rows.map(x=>`<div class="cart-row"><b>${x.name}</b><span>${x.qty} × ${money(x.price)}</span><button class="btn ghost" onclick="cart=cart.filter(i=>i.id!==${x.id});cartSave();hydrateCart()">Remove</button></div>`).join('')}<hr><h3>Total: ${money(total)}</h3><form class="form" onsubmit="checkout(event)"><input name="delivery_address" required placeholder="Delivery address / pickup preference"><select name="payment_method"><option>Mobile Money</option><option>Card</option></select><button class="btn primary">Proceed to Payment</button></form><p class="meta">Live payment collection requires your selected payment provider credentials on Railway.</p>`:'<div class="empty">Your cart is empty.</div>'}
@@ -33,4 +33,34 @@ async function loadChat(){if(!activeConversation)return;let ms=await api(`/api/c
 function startChatPoll(){clearInterval(chatTimer);chatTimer=setInterval(()=>loadChat().catch(()=>{}),3500)}
 async function sendChat(e){e.preventDefault();if(!customerUser())return route('account');let i=document.getElementById('chatInput'),m=i.value.trim();if(!m)return;await ensureConversation();await api(`/api/chat/conversations/${activeConversation}/messages`,{method:'POST',body:JSON.stringify({message:m})});i.value='';await loadChat()}
 // final route extension
-const ecosystemRender=renderRoute;renderRoute=function(){let r=(location.hash.slice(1)||'home').split('/')[0];if(['store','cart','services','towing','agents','terms'].includes(r)){app.innerHTML=r==='store'?`<section></section>`:r==='cart'?cartPage():r==='services'?servicesPage():r==='towing'?towingPage():r==='agents'?agentsPage():termsPage();if(r==='store'){app.innerHTML=storePage();setTimeout(hydrateStore,0)}if(r==='cart')setTimeout(hydrateCart,0);if(r==='services')setTimeout(hydrateServices,0);if(r==='agents')setTimeout(hydrateAgents,0);if(r==='terms')setTimeout(hydrateTerms,0);window.scrollTo(0,0);navClose();return}ecosystemRender();navClose()}
+const ecosystemRender=renderRoute;
+renderRoute=function(){
+  let r=(location.hash.slice(1)||'home').split('/')[0];
+  if(['store','cart','services','towing','agents','terms'].includes(r)){
+    if(r==='store'){app.innerHTML=storePage();setTimeout(hydrateStore,0)}
+    else if(r==='cart'){app.innerHTML=cartPage();setTimeout(hydrateCart,0)}
+    else if(r==='services'){app.innerHTML=servicesPage();setTimeout(hydrateServices,0)}
+    else if(r==='towing')app.innerHTML=towingPage();
+    else if(r==='agents'){app.innerHTML=agentsPage();setTimeout(hydrateAgents,0)}
+    else if(r==='terms'){app.innerHTML=termsPage();setTimeout(hydrateTerms,0)}
+    document.querySelectorAll('nav a').forEach(a=>a.style.color=a.dataset.route===r?'var(--accent)':'');
+    window.scrollTo(0,0);navClose();return;
+  }
+  ecosystemRender();navClose();
+};
+// app.js registered its original renderer before this expansion loaded. Replace that
+// listener so new ecosystem routes are not incorrectly sent back to Home.
+window.removeEventListener('hashchange',ecosystemRender);
+window.addEventListener('hashchange',renderRoute);
+// Render once through the expanded router in case the page was opened directly at #store/#services.
+renderRoute();
+
+// Surface the wider Revolt ecosystem on the client home page as well.
+const ecosystemBaseHome=home;
+home=function(){
+  const html=ecosystemBaseHome();
+  const hub=`<section class="section ecosystem-hub"><div class="section-head"><div><h2>Everything for your car, in one place</h2><p>Shop parts, book automotive services, speak with our team and manage your vehicle journey from Revolt AutoLink.</p></div></div><div class="why ecosystem-links"><div><span class="num">SHOP</span><h3>Auto Parts Store</h3><p>Browse car-care essentials and replacement parts, add items to your cart and track your orders.</p><button class="btn primary" onclick="route('store')">Shop Parts</button></div><div><span class="num">CARE</span><h3>Automotive Services</h3><p>Request engine tuning, repairs, maintenance, detailing, insurance support and customisation.</p><button class="btn dark" onclick="route('services')">Explore Services</button></div><div><span class="num">SUPPORT</span><h3>Talk to Revolt</h3><p>Use in-app chat or WhatsApp for help with a vehicle, order or service request.</p><button class="btn ghost" onclick="toggleChat()">Start a Chat</button></div><div><span class="num">COMING SOON</span><h3>Revolt Towing</h3><p>Roadside towing and recovery is being prepared as part of the Revolt ecosystem.</p><button class="btn ghost" onclick="route('towing')">Learn More</button></div></div></section>`;
+  return html.replace('</section><section class="section"><div class="cta">', '</section>'+hub+'<section class="section"><div class="cta">');
+};
+// Re-render after the home enhancement when currently on Home.
+if(!location.hash || location.hash==='#home') renderRoute();
