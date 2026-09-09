@@ -121,3 +121,28 @@ async function hydrateTopVehicleGallery(id){
 }
 const _carPageTopGallery=carPage;
 carPage=function(id){const html=_carPageTopGallery(id);setTimeout(()=>hydrateTopVehicleGallery(id),0);return html}
+
+
+// 2026-09-09 UX fixes: lightbox back button, customer chat isolation, store hydration.
+let revoltLightboxHistory=false;
+const _openVehicleMediaHistory=openVehicleMedia;
+openVehicleMedia=async function(vehicleId,mediaId){
+  await _openVehicleMediaHistory(vehicleId,mediaId);
+  if(window.galleryState && !revoltLightboxHistory){ history.pushState({revoltLightbox:true},'',location.href); revoltLightboxHistory=true; }
+};
+const _openMediaHistory=openMedia;
+openMedia=function(src,title='Vehicle media'){
+  _openMediaHistory(src,title);
+  if(window.galleryState && !revoltLightboxHistory){ history.pushState({revoltLightbox:true},'',location.href); revoltLightboxHistory=true; }
+};
+const _closeLightboxHistory=closeLightbox;
+closeLightbox=function(fromPop=false){
+  _closeLightboxHistory();
+  if(revoltLightboxHistory){ revoltLightboxHistory=false; if(!fromPop) history.back(); }
+};
+window.addEventListener('popstate',()=>{ if(window.galleryState){ revoltLightboxHistory=false; _closeLightboxHistory(); } });
+// Force all public chat operations to use the customer session, never an Admin token.
+ensureConversation=async function(){let cs=await customerApi('/api/chat/conversations');activeConversation=cs[0]?.id;if(!activeConversation){let r=await customerApi('/api/chat/conversations',{method:'POST',body:JSON.stringify({subject:'Website support',context_type:'general'})});activeConversation=r.id}await loadChat()};
+loadChat=async function(){if(!activeConversation)return;let ms=await customerApi(`/api/chat/conversations/${activeConversation}/messages`),b=document.getElementById('chatBody');let newest=ms.at(-1);if(newest&&newest.id>lastCustomerChatMessage&&newest.sender_type==='admin'&&!document.getElementById('chatPanel')?.classList.contains('open')){unreadChatReplies++;updateChatBadge();toast('New reply from Revolt AutoLink')}if(newest)lastCustomerChatMessage=newest.id;if(b){b.innerHTML=ms.length?ms.map(m=>`<div class="chat-msg ${m.sender_type}"><span>${esc(m.message)}</span><small>${new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</small></div>`).join(''):'<div class="chat-welcome">Start the conversation. We are ready to help.</div>';b.scrollTop=b.scrollHeight}};
+// Rehydrate Store whenever its route is visible, including browser navigation.
+window.addEventListener('hashchange',()=>{if(location.hash==='#store')setTimeout(hydrateStore,20)});
