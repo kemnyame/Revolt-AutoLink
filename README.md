@@ -54,3 +54,15 @@ Includes interactive gallery, Parts Store/cart/orders, payment architecture for 
 
 ### Notification providers
 Email delivery is wired to Resend when configured. WhatsApp delivery is wired to Meta WhatsApp Cloud API when configured. In-app request/chat functionality works even when external notification providers are not configured.
+
+## Urgent media/chat/store/payment update - 9 Sep 2026
+- Vehicle photography now uses labelled upload frames (Front, Back, Left, Right, Front Interior, Rear Interior, Engine Bay, Boot/Trunk, Gallery).
+- Admin previews selected photography immediately and can choose any uploaded image as the Browse Cars display photo.
+- Public vehicle detail now renders an organised, labelled photography gallery with fullscreen arrows.
+- Admin Chat Centre no longer re-renders while the agent is typing; replies remain stable and messages refresh without destroying the input.
+- Store has live client-side search. Internal stock counts are not displayed to customers.
+- Admin > Payment Setup accepts Paystack configuration for GHS Card and Mobile Money checkout. Use TEST keys first. Secret keys remain server-side.
+- Vehicle registration uses dropdowns and feature checkboxes for standardized data entry.
+
+### Payment production setup
+In Admin > Payment Setup configure Paystack and the callback URL. Railway can alternatively set `PAYSTACK_SECRET_KEY`. Never place the secret key in frontend code. Complete merchant verification and test transactions before switching to live keys.
