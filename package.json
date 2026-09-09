@@ -1,1 +1,13 @@
-{"name":"revolt-autolink","version":"1.0.0","private":true,"scripts":{"start":"node server.js","dev":"node --watch server.js"},"engines":{"node":">=22"}}
+{
+  "name": "revolt-autolink",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "reset-admin": "node reset-admin.js"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
