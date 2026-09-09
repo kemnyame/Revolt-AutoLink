@@ -37,3 +37,7 @@ Mount persistent storage to `/app/data` for SQLite and `/app/uploads` for vehicl
 
 ## Security
 The requested default Admin credentials are included. Change them before a real public launch.
+
+
+## Ecosystem expansion
+Includes interactive gallery, Parts Store/cart/orders, payment architecture for MoMo/card provider credentials, services/service requests, towing coming-soon page, agents, admin-managed terms, finance dashboard, and database-backed in-app chat with Admin Chat Centre.
