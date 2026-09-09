@@ -41,3 +41,16 @@ The requested default Admin credentials are included. Change them before a real 
 
 ## Ecosystem expansion
 Includes interactive gallery, Parts Store/cart/orders, payment architecture for MoMo/card provider credentials, services/service requests, towing coming-soon page, agents, admin-managed terms, finance dashboard, and database-backed in-app chat with Admin Chat Centre.
+
+## Customer Experience & Communication Update
+- Dark/light theme toggle with saved preference.
+- Responsive, differentiated Parts Store and Services experiences.
+- Animated Add to Cart feedback and compact responsive checkout.
+- Service requests, vehicle enquiries, inspection requests and Find-a-Car requests automatically create linked in-app conversations.
+- Admin Notification Setup page configures admin email/WhatsApp recipients plus Resend and Meta WhatsApp Cloud API credentials.
+- External notifications require provider credentials. Recommended production practice is to store API secrets as Railway environment variables: `RESEND_API_KEY`, `NOTIFY_FROM_EMAIL`, `ADMIN_NOTIFY_EMAIL`, `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `ADMIN_NOTIFY_WHATSAPP`.
+- Admin can upload product/service images from files instead of pasting URLs.
+- Legal & Agreement Documents centre supports PDF, DOC/DOCX and image uploads.
+
+### Notification providers
+Email delivery is wired to Resend when configured. WhatsApp delivery is wired to Meta WhatsApp Cloud API when configured. In-app request/chat functionality works even when external notification providers are not configured.
