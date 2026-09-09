@@ -1,36 +1,39 @@
-# Revolt AutoLink - Hosting Complete Build
-
-This build keeps the approved Revolt AutoLink public design and uses the Node.js + SQLite backend as the operational source of truth.
+# Revolt AutoLink — Railway Hosting Build
+**Find It. Trust It. Drive It.**
 
 ## Included
-- Public vehicle catalogue loaded from the database
-- Separate `/admin.html` dashboard
-- Direct admin access for the current testing phase (no admin authentication gate)
-- Vehicle create/edit/status/delete
-- Multi-photo vehicle upload from Add/Edit Vehicle
-- Uploaded images stored in `/uploads` and linked in the `media` database table
-- About Us content editor in Admin, reflected on the public About page
-- Customer registration/login/profile
-- Enquiries, inspections, Find Me a Car requests, alerts, contacts, customers and audit records
-- Dashboard analytics from live database records
-- Saved and Compare use browser `sessionStorage`, so they clear when the browser/tab session ends
-- Docker/Docker Compose files with persistent `/app/data` and `/app/uploads` volumes
+- Separate protected Admin portal at `/admin.html`
+- Default requested Admin credentials: `admin` / `admin`
+- Backend-managed vehicles, photos, video, engine sound, About Us, customers, enquiries, inspections, car requests, alerts, messages and audit logs
+- Structured photo upload slots: front, back, left, right, front interior, rear interior, engine bay, boot/trunk, plus gallery
+- Walkaround video and engine-sound upload, rendered on vehicle pages
+- Customer email/password accounts plus configurable Google and Facebook OAuth
+- Customer sign-in required before enquiries, inspections and Find Me a Car requests
+- WhatsApp chat linked to +233 50 008 1646
+- Saved/Compare use sessionStorage and clear after the browser/tab session
+- SQLite database and persistent upload directory
 
-## Start locally
-Requires Node.js 22+.
+## Railway variables
+Set these in Railway > Service > Variables:
+`PORT=3000`
+`DATABASE_PATH=/app/data/revolt.db`
+`ADMIN_EMAIL=admin`
+`ADMIN_PASSWORD=admin`
+`APP_URL=https://YOUR-RAILWAY-DOMAIN.up.railway.app`
 
-```bash
-npm start
-```
+For Google sign-in also set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
+Authorized redirect URI: `https://YOUR-DOMAIN/api/oauth/google/callback`
 
-Open:
-- Website: `http://localhost:3000`
-- Admin: `http://localhost:3000/admin.html`
+For Facebook sign-in also set `FACEBOOK_APP_ID` and `FACEBOOK_APP_SECRET`.
+Valid OAuth redirect URI: `https://YOUR-DOMAIN/api/oauth/facebook/callback`
 
-## Hosting
-Use a Node/Docker host with persistent volumes. The database file is created automatically at `data/revolt.db` on first start. Keep both the database and uploads directories persistent.
+Google/Facebook buttons are built in, but the providers will not authenticate users until their app credentials and redirect URLs are configured in the provider consoles.
 
-The current Admin dashboard intentionally has direct access as requested. Restore authentication before a public commercial launch.
+## Persistent Railway storage
+Mount persistent storage to `/app/data` for SQLite and `/app/uploads` for vehicle media. Uploaded photos, videos and audio are local files and require persistent storage.
 
-## Photo limits
-The admin can select up to 12 images per save operation. JPG, PNG and WebP are supported, with a 6 MB limit per image.
+## Start
+`npm start`
+
+## Security
+The requested default Admin credentials are included. Change them before a real public launch.

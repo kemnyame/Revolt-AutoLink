@@ -14,3 +14,6 @@ CREATE INDEX IF NOT EXISTS idx_vehicle_status ON vehicles(status);CREATE INDEX I
 CREATE TABLE IF NOT EXISTS contact_messages(id INTEGER PRIMARY KEY,name TEXT NOT NULL,phone TEXT,email TEXT,message TEXT NOT NULL,status TEXT DEFAULT 'New',created_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS content_blocks(key TEXT PRIMARY KEY,title TEXT,subtitle TEXT,body TEXT,extra_json TEXT,updated_at TEXT NOT NULL);
 CREATE INDEX IF NOT EXISTS idx_media_vehicle_sort ON media(vehicle_id,sort_order);
+
+CREATE TABLE IF NOT EXISTS oauth_accounts(id INTEGER PRIMARY KEY,user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,provider TEXT NOT NULL,provider_id TEXT NOT NULL,created_at TEXT NOT NULL,UNIQUE(provider,provider_id));
+CREATE TABLE IF NOT EXISTS oauth_states(state TEXT PRIMARY KEY,provider TEXT NOT NULL,created_at TEXT NOT NULL);
