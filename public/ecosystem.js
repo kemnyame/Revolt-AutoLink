@@ -146,3 +146,36 @@ ensureConversation=async function(){let cs=await customerApi('/api/chat/conversa
 loadChat=async function(){if(!activeConversation)return;let ms=await customerApi(`/api/chat/conversations/${activeConversation}/messages`),b=document.getElementById('chatBody');let newest=ms.at(-1);if(newest&&newest.id>lastCustomerChatMessage&&newest.sender_type==='admin'&&!document.getElementById('chatPanel')?.classList.contains('open')){unreadChatReplies++;updateChatBadge();toast('New reply from Revolt AutoLink')}if(newest)lastCustomerChatMessage=newest.id;if(b){b.innerHTML=ms.length?ms.map(m=>`<div class="chat-msg ${m.sender_type}"><span>${esc(m.message)}</span><small>${new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</small></div>`).join(''):'<div class="chat-welcome">Start the conversation. We are ready to help.</div>';b.scrollTop=b.scrollHeight}};
 // Rehydrate Store whenever its route is visible, including browser navigation.
 window.addEventListener('hashchange',()=>{if(location.hash==='#store')setTimeout(hydrateStore,20)});
+
+// === Sep 10 urgent Parts Store loading fix ===
+// Products are public catalogue data. Fetch them without any stale Admin/customer token,
+// render a visible error instead of leaving the page on "Loading products...", and
+// rehydrate whenever the Store view is mounted by any router wrapper.
+async function fetchPublicProducts(){
+  const r=await fetch('/api/products',{method:'GET',headers:{'accept':'application/json'},cache:'no-store'});
+  const data=await r.json().catch(()=>null);
+  if(!r.ok||!Array.isArray(data)) throw new Error((data&&data.error)||'Unable to load store products');
+  return data;
+}
+hydrateStore=async function(){
+  const grid=document.getElementById('storeGrid');
+  if(!grid)return;
+  try{
+    storeProducts=(await fetchPublicProducts()).filter(x=>String(x.status||'').toLowerCase()==='active');
+    renderStoreProducts(storeProducts);
+  }catch(err){
+    console.error('Store load failed:',err);
+    grid.innerHTML=`<div class="panel store-load-error"><h3>Unable to load products</h3><p class="meta">${esc(err.message||'Please try again.')}</p><button class="btn primary" onclick="hydrateStore()">Retry</button></div>`;
+  }
+};
+// Make product image failures graceful without hiding the catalogue.
+const _renderStoreProductsReliable=renderStoreProducts;
+renderStoreProducts=function(d){
+  const e=document.getElementById('storeGrid');if(!e)return;
+  e.innerHTML=d.map(x=>`<article class="product-card">${x.image?`<img src="${x.image}" alt="${esc(x.name)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling?.classList.remove('hidden')"><div class="product-placeholder hidden">AUTO PARTS</div>`:`<div class="product-placeholder">AUTO PARTS</div>`}<div class="car-body"><span class="chip">${esc(x.category||'Parts')}</span><h3>${esc(x.name)}</h3><p class="meta">${esc(x.description||'')}</p><div class="price">${money(Number(x.price)||0)}</div><button class="btn primary" onclick="addCart(${x.id})">Add to Cart</button></div></article>`).join('')||'<div class="empty">No products are currently available.</div>';
+};
+function ensureStoreHydrated(){if(document.getElementById('storeGrid'))hydrateStore()}
+window.addEventListener('hashchange',()=>{if((location.hash||'').startsWith('#store'))setTimeout(ensureStoreHydrated,0)});
+const storeMountObserver=new MutationObserver(()=>{if(document.getElementById('storeGrid')&&!document.getElementById('storeGrid').dataset.loadingFix){document.getElementById('storeGrid').dataset.loadingFix='1';setTimeout(ensureStoreHydrated,0)}});
+storeMountObserver.observe(document.getElementById('app'),{childList:true,subtree:true});
+setTimeout(ensureStoreHydrated,0);
