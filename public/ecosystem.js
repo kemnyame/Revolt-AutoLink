@@ -180,3 +180,29 @@ window.addEventListener('hashchange',()=>{if((location.hash||'').startsWith('#st
 const storeMountObserver=new MutationObserver(()=>{if(document.getElementById('storeGrid')&&!document.getElementById('storeGrid').dataset.loadingFix){document.getElementById('storeGrid').dataset.loadingFix='1';setTimeout(ensureStoreHydrated,0)}});
 storeMountObserver.observe(document.getElementById('app'),{childList:true,subtree:true});
 setTimeout(ensureStoreHydrated,0);
+
+// === Revolt Parts Store Pro UX ===
+let storeCategory='All', storeSort='featured';
+function storeCartCount(){return cart.reduce((a,x)=>a+(Number(x.qty)||0),0)}
+storePage=function(){return `<section class="section store-pro-page">
+  <div class="store-pro-hero">
+    <div><span class="store-kicker">REVOLT PARTS</span><h1>Parts for the road ahead.</h1><p>Search trusted automotive parts, maintenance essentials and car-care products.</p></div>
+    <button class="store-cart-btn" onclick="route('cart')"><span>🛒</span><b>Cart</b><em id="storeCartCount">${storeCartCount()}</em></button>
+  </div>
+  <div class="store-toolbar">
+    <div class="store-search-pro"><span>⌕</span><input id="storeSearch" autocomplete="off" placeholder="Search brake pads, engine oil, battery…" oninput="filterStore(this.value)"><button onclick="filterStore(document.getElementById('storeSearch').value)">Search</button></div>
+    <select id="storeSort" onchange="storeSort=this.value;applyStoreFilters()"><option value="featured">Featured</option><option value="price-low">Price: Low to High</option><option value="price-high">Price: High to Low</option><option value="name">Name A-Z</option></select>
+  </div>
+  <div id="storeCategories" class="store-categories"></div>
+  <div class="store-results-line"><div><b id="storeResultCount">0</b> products</div><span>Quality parts. Simple checkout.</span></div>
+  <div id="storeGrid" class="store-grid store-grid-pro"><div class="store-skeleton"></div><div class="store-skeleton"></div><div class="store-skeleton"></div><div class="store-skeleton"></div></div>
+</section>`}
+function renderStoreCategories(){const box=document.getElementById('storeCategories');if(!box)return;const cats=['All',...new Set(storeProducts.map(x=>String(x.category||'Other')).filter(Boolean))];box.innerHTML=cats.map(c=>`<button class="${storeCategory===c?'active':''}" onclick="storeCategory=${JSON.stringify(c)};renderStoreCategories();applyStoreFilters()">${esc(c)}</button>`).join('')}
+function applyStoreFilters(){const q=String(document.getElementById('storeSearch')?.value||'').toLowerCase().trim();let d=storeProducts.filter(x=>(storeCategory==='All'||String(x.category||'Other')===storeCategory)&&(!q||[x.name,x.category,x.description].some(v=>String(v||'').toLowerCase().includes(q))));if(storeSort==='price-low')d.sort((a,b)=>Number(a.price)-Number(b.price));if(storeSort==='price-high')d.sort((a,b)=>Number(b.price)-Number(a.price));if(storeSort==='name')d.sort((a,b)=>String(a.name).localeCompare(String(b.name)));renderStoreProducts(d)}
+filterStore=function(){applyStoreFilters()}
+renderStoreProducts=function(d){const e=document.getElementById('storeGrid');if(!e)return;const count=document.getElementById('storeResultCount');if(count)count.textContent=d.length;e.innerHTML=d.map(x=>`<article class="product-card product-card-pro">
+  <div class="product-media">${x.image?`<img src="${esc(x.image)}" alt="${esc(x.name)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.classList.remove('hidden')"><div class="product-placeholder hidden">REVOLT PARTS</div>`:`<div class="product-placeholder">REVOLT PARTS</div>`}<span class="product-category">${esc(x.category||'Parts')}</span></div>
+  <div class="product-info"><h3>${esc(x.name)}</h3><p>${esc(x.description||'Automotive part and accessory.')}</p><div class="product-buy"><div><small>Price</small><strong>${money(Number(x.price)||0)}</strong></div><button class="btn primary" onclick="addCart(${x.id})">Add to cart</button></div></div>
+</article>`).join('')||`<div class="store-empty"><b>No products found</b><p>Try another keyword or category.</p><button class="btn ghost" onclick="document.getElementById('storeSearch').value='';storeCategory='All';renderStoreCategories();applyStoreFilters()">Clear filters</button></div>`}
+const hydrateStorePro=hydrateStore;hydrateStore=async function(){const grid=document.getElementById('storeGrid');if(!grid)return;try{storeProducts=(await fetchPublicProducts()).filter(x=>String(x.status||'').toLowerCase()==='active');renderStoreCategories();applyStoreFilters()}catch(err){console.error('Store load failed:',err);grid.innerHTML=`<div class="panel store-load-error"><h3>We couldn't load the Parts Store</h3><p class="meta">${esc(err.message||'Please try again.')}</p><button class="btn primary" onclick="hydrateStore()">Try again</button></div>`}}
+const addCartPro=addCart;addCart=function(id){addCartPro(id);setTimeout(()=>{const n=document.getElementById('storeCartCount');if(n)n.textContent=storeCartCount()},0)}
