@@ -66,3 +66,19 @@ Email delivery is wired to Resend when configured. WhatsApp delivery is wired to
 
 ### Payment production setup
 In Admin > Payment Setup configure Paystack and the callback URL. Railway can alternatively set `PAYSTACK_SECRET_KEY`. Never place the secret key in frontend code. Complete merchant verification and test transactions before switching to live keys.
+
+## Production hardening added Sep 10, 2026
+
+### Staging and production
+Use two Railway services from the same repository:
+- `revolt-autolink-staging` connected to a staging branch and separate database/volumes.
+- `revolt-autolink-production` connected to the production/main branch and production database/volumes.
+Promote a tested commit from staging to production rather than editing production directly.
+
+### Vehicle media storage
+The application continues to support its existing `/uploads` volume for compatibility. For scale, configure an S3-compatible object-storage/CDN layer and migrate uploaded vehicle images/video/audio there. Keep only object URLs in the `media.path` column. Do not share staging and production buckets/credentials.
+
+Recommended environment variables for the next storage adapter:
+`OBJECT_STORAGE_ENDPOINT`, `OBJECT_STORAGE_BUCKET`, `OBJECT_STORAGE_ACCESS_KEY`, `OBJECT_STORAGE_SECRET_KEY`, `OBJECT_STORAGE_PUBLIC_BASE_URL`.
+
+The public catalogue now cache-busts its vehicle API refresh and gracefully handles broken media URLs, which prevents a missing file from breaking Browse Cars. Persistent production media still requires a Railway volume or object storage.
