@@ -82,3 +82,11 @@ Recommended environment variables for the next storage adapter:
 `OBJECT_STORAGE_ENDPOINT`, `OBJECT_STORAGE_BUCKET`, `OBJECT_STORAGE_ACCESS_KEY`, `OBJECT_STORAGE_SECRET_KEY`, `OBJECT_STORAGE_PUBLIC_BASE_URL`.
 
 The public catalogue now cache-busts its vehicle API refresh and gracefully handles broken media URLs, which prevents a missing file from breaking Browse Cars. Persistent production media still requires a Railway volume or object storage.
+
+## Sep 14 robust request / chat update
+- Admin notification panel is now a New / Read alert feed. Opening a request category marks its current alerts as read.
+- Request emails use branded HTML with the Revolt AutoLink logo and direct customer/Admin links. Set `APP_URL=https://revolt-autolink-production.up.railway.app` so links and logo resolve correctly. Live email delivery requires `RESEND_API_KEY`, `NOTIFY_FROM_EMAIL`, and `ADMIN_NOTIFY_EMAIL`.
+- Vehicle enquiry and inspection email/chat subjects use the vehicle title rather than a numeric request reference.
+- Admin Chat Centre groups conversations by customer and keeps each vehicle/service as a named thread.
+- Dealers & Garages Admin captures business registration, contact/WhatsApp, location, operating hours, specialties, commercial terms, internal notes and optional logo URL.
+- Compare includes a Decision Assistant button that ranks the currently compared vehicles using only recorded data and explains its reasons and missing information. It does not replace a physical/mechanical inspection.
