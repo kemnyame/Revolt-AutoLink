@@ -90,3 +90,12 @@ The public catalogue now cache-busts its vehicle API refresh and gracefully hand
 - Admin Chat Centre groups conversations by customer and keeps each vehicle/service as a named thread.
 - Dealers & Garages Admin captures business registration, contact/WhatsApp, location, operating hours, specialties, commercial terms, internal notes and optional logo URL.
 - Compare includes a Decision Assistant button that ranks the currently compared vehicles using only recorded data and explains its reasons and missing information. It does not replace a physical/mechanical inspection.
+
+## September 14 ownership and workflow hardening
+- Request alerts are presented as NEW and READ only.
+- Branded request email workflow includes Revolt logo, request content, vehicle name where applicable, and direct Admin/customer links. Requires configured Resend credentials and APP_URL.
+- Customer conversations remain separated by request context but grouped under the same customer in Admin Chat Centre.
+- Dealer/Garage CRM remains available in Admin.
+- Compare is mobile-hardened and includes a visible "Give Me the Best Option" decision assistant.
+- Vehicle Ownership is now a first-class experience. Admin can register a purchased vehicle to a customer and link tracker status/device ID, insurance, service dates, ownership history and last-known location. The customer sees the vehicle under My Vehicles.
+- Live GPS coordinates/maps require a future supported tracker-provider API integration. The current build stores and presents tracker linkage/status and ownership data without pretending a live GPS provider is connected.
