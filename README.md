@@ -1,64 +1,92 @@
-# Revolt Corporate Fleet Management
+# Revolt AutoLink — Railway Hosting Build
+**Find It. Trust It. Drive It.**
 
-Deployment-ready Node.js fleet-management application for Railway. The application includes the web UI, backend REST API, populated fleet data, SQLite persistence, GPS ingestion/history endpoints, and a health check.
+## Included
+- Separate protected Admin portal at `/admin.html`
+- Default requested Admin credentials: `admin` / `admin`
+- Backend-managed vehicles, photos, video, engine sound, About Us, customers, enquiries, inspections, car requests, alerts, messages and audit logs
+- Structured photo upload slots: front, back, left, right, front interior, rear interior, engine bay, boot/trunk, plus gallery
+- Walkaround video and engine-sound upload, rendered on vehicle pages
+- Customer email/password accounts plus configurable Google and Facebook OAuth
+- Customer sign-in required before enquiries, inspections and Find Me a Car requests
+- WhatsApp chat linked to +233 50 008 1646
+- Saved/Compare use sessionStorage and clear after the browser/tab session
+- SQLite database and persistent upload directory
 
-## Railway deployment
+## Railway variables
+Set these in Railway > Service > Variables:
+`PORT=3000`
+`DATABASE_PATH=/app/data/revolt.db`
+`ADMIN_EMAIL=admin`
+`ADMIN_PASSWORD=admin`
+`APP_URL=https://YOUR-RAILWAY-DOMAIN.up.railway.app`
 
-1. Push the contents of this folder to a GitHub repository.
-2. In Railway, create a **New Project > Deploy from GitHub Repo** and select the repository.
-3. Add a **Volume** to the web service and mount it at `/data`.
-4. In **Variables**, add:
-   - `DATABASE_PATH=/data/revolt-fleet.db`
-   - `NODE_ENV=production`
-   - `ADMIN_EMAIL=<your admin email>`
-   - `ADMIN_PASSWORD=<a strong password>`
-5. Do not set `PORT`; Railway supplies it automatically.
-6. Deploy. `railway.json` supplies `npm start` and the `/api/health` health check.
-7. In **Networking**, generate a public domain or attach your custom domain.
+For Google sign-in also set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
+Authorized redirect URI: `https://YOUR-DOMAIN/api/oauth/google/callback`
 
-On the first start with an empty volume, the application automatically creates and populates the database with demonstration fleet data.
+For Facebook sign-in also set `FACEBOOK_APP_ID` and `FACEBOOK_APP_SECRET`.
+Valid OAuth redirect URI: `https://YOUR-DOMAIN/api/oauth/facebook/callback`
 
-## Local run
+Google/Facebook buttons are built in, but the providers will not authenticate users until their app credentials and redirect URLs are configured in the provider consoles.
 
-Requires Node.js 22+.
+## Persistent Railway storage
+Mount persistent storage to `/app/data` for SQLite and `/app/uploads` for vehicle media. Uploaded photos, videos and audio are local files and require persistent storage.
 
-```bash
-npm start
-```
+## Start
+`npm start`
 
-Open `http://localhost:3000`.
+## Security
+The requested default Admin credentials are included. Change them before a real public launch.
 
-## GPS API
 
-Health check:
+## Ecosystem expansion
+Includes interactive gallery, Parts Store/cart/orders, payment architecture for MoMo/card provider credentials, services/service requests, towing coming-soon page, agents, admin-managed terms, finance dashboard, and database-backed in-app chat with Admin Chat Centre.
 
-`GET /api/health`
+## Customer Experience & Communication Update
+- Dark/light theme toggle with saved preference.
+- Responsive, differentiated Parts Store and Services experiences.
+- Animated Add to Cart feedback and compact responsive checkout.
+- Service requests, vehicle enquiries, inspection requests and Find-a-Car requests automatically create linked in-app conversations.
+- Admin Notification Setup page configures admin email/WhatsApp recipients plus Resend and Meta WhatsApp Cloud API credentials.
+- External notifications require provider credentials. Recommended production practice is to store API secrets as Railway environment variables: `RESEND_API_KEY`, `NOTIFY_FROM_EMAIL`, `ADMIN_NOTIFY_EMAIL`, `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `ADMIN_NOTIFY_WHATSAPP`.
+- Admin can upload product/service images from files instead of pasting URLs.
+- Legal & Agreement Documents centre supports PDF, DOC/DOCX and image uploads.
 
-GPS ingestion:
+### Notification providers
+Email delivery is wired to Resend when configured. WhatsApp delivery is wired to Meta WhatsApp Cloud API when configured. In-app request/chat functionality works even when external notification providers are not configured.
 
-`POST /api/gps/ingest`
+## Urgent media/chat/store/payment update - 9 Sep 2026
+- Vehicle photography now uses labelled upload frames (Front, Back, Left, Right, Front Interior, Rear Interior, Engine Bay, Boot/Trunk, Gallery).
+- Admin previews selected photography immediately and can choose any uploaded image as the Browse Cars display photo.
+- Public vehicle detail now renders an organised, labelled photography gallery with fullscreen arrows.
+- Admin Chat Centre no longer re-renders while the agent is typing; replies remain stable and messages refresh without destroying the input.
+- Store has live client-side search. Internal stock counts are not displayed to customers.
+- Admin > Payment Setup accepts Paystack configuration for GHS Card and Mobile Money checkout. Use TEST keys first. Secret keys remain server-side.
+- Vehicle registration uses dropdowns and feature checkboxes for standardized data entry.
 
-Example JSON body:
+### Payment production setup
+In Admin > Payment Setup configure Paystack and the callback URL. Railway can alternatively set `PAYSTACK_SECRET_KEY`. Never place the secret key in frontend code. Complete merchant verification and test transactions before switching to live keys.
 
-```json
-{
-  "tracker_id": "GPS-1000",
-  "lat": 5.6037,
-  "lng": -0.1870,
-  "speed": 42
-}
-```
+## Production hardening added Sep 10, 2026
 
-GPS history:
+### Staging and production
+Use two Railway services from the same repository:
+- `revolt-autolink-staging` connected to a staging branch and separate database/volumes.
+- `revolt-autolink-production` connected to the production/main branch and production database/volumes.
+Promote a tested commit from staging to production rather than editing production directly.
 
-`GET /api/gps/history?vehicle=RVT-102`
+### Vehicle media storage
+The application continues to support its existing `/uploads` volume for compatibility. For scale, configure an S3-compatible object-storage/CDN layer and migrate uploaded vehicle images/video/audio there. Keep only object URLs in the `media.path` column. Do not share staging and production buckets/credentials.
 
-## Important production note
+Recommended environment variables for the next storage adapter:
+`OBJECT_STORAGE_ENDPOINT`, `OBJECT_STORAGE_BUCKET`, `OBJECT_STORAGE_ACCESS_KEY`, `OBJECT_STORAGE_SECRET_KEY`, `OBJECT_STORAGE_PUBLIC_BASE_URL`.
 
-This package is deployment-ready for a hosted pilot/demo. Before storing sensitive real corporate fleet data, add production authentication/MFA, strict multi-tenant authorization, secret management, object storage, backups, and migrate high-volume telematics workloads to PostgreSQL or a dedicated telemetry store.
+The public catalogue now cache-busts its vehicle API refresh and gracefully handles broken media URLs, which prevents a missing file from breaking Browse Cars. Persistent production media still requires a Railway volume or object storage.
 
-## UI Refresh - September 2026
-This package includes the refreshed Revolt Fleet Intelligence interface: brighter corporate command-centre styling, vivid gradient page headers, redesigned navigation, KPI cards, tables, forms, modal windows and responsive mobile layouts. Existing API/database behaviour is retained.
-
-## QA status
-Validated locally: JavaScript syntax, Node server startup, health endpoint, bootstrap data, resource GET endpoints, vehicle/driver/fuel/incident creation, GPS ingestion and GPS history. Some demonstration-only controls remain intentionally non-persistent: geofence drawing, generic trip/maintenance/document/user forms, report generation, alert acknowledgement and settings save. These require the next workflow/API implementation layer before production customer use.
+## Sep 14 robust request / chat update
+- Admin notification panel is now a New / Read alert feed. Opening a request category marks its current alerts as read.
+- Request emails use branded HTML with the Revolt AutoLink logo and direct customer/Admin links. Set `APP_URL=https://revolt-autolink-production.up.railway.app` so links and logo resolve correctly. Live email delivery requires `RESEND_API_KEY`, `NOTIFY_FROM_EMAIL`, and `ADMIN_NOTIFY_EMAIL`.
+- Vehicle enquiry and inspection email/chat subjects use the vehicle title rather than a numeric request reference.
+- Admin Chat Centre groups conversations by customer and keeps each vehicle/service as a named thread.
+- Dealers & Garages Admin captures business registration, contact/WhatsApp, location, operating hours, specialties, commercial terms, internal notes and optional logo URL.
+- Compare includes a Decision Assistant button that ranks the currently compared vehicles using only recorded data and explains its reasons and missing information. It does not replace a physical/mechanical inspection.
