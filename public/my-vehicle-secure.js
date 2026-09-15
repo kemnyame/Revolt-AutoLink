@@ -22,3 +22,17 @@ window.renderSecureVehicle=async function(){if((location.hash.replace('#','').sp
 function routeGuard(){const r=(location.hash.replace('#','')||'home').split('/')[0];if(r==='ownership'){setTimeout(renderSecureVehicle,0)}}
 window.addEventListener('hashchange',routeGuard);window.addEventListener('popstate',routeGuard);document.addEventListener('click',e=>{let a=e.target.closest('a[href="#ownership"]');if(a)setTimeout(renderSecureVehicle,0)});routeGuard();
 })();
+
+/* My Vehicle V2 route + dashboard reliability patch */
+(function(){
+const _secureRender=window.renderSecureVehicle;
+// Own the ownership route completely so legacy ownershipPage cannot flash or call PIN-protected APIs without the PIN token.
+const _baseRender=window.renderRoute;
+window.renderRoute=function(){const r=(location.hash.replace('#','')||'home').split('/')[0];if(r==='ownership'){window.scrollTo(0,0);setTimeout(()=>window.renderSecureVehicle(),0);return}_baseRender()};
+// Form submission: clear immediately after successful persistence, then close.
+const _submit=window.submitOwnershipRequest;
+window.submitOwnershipRequest=async function(e){e.preventDefault();const form=e.target;try{let fd=new FormData(form),services=fd.getAll('services'),b=Object.fromEntries(fd);b.services=services;b.tracker_required=services.includes('Tracker installation');b.insurance_required=services.includes('Insurance support');let d=await ownApi('/api/ownership/request',{method:'POST',body:JSON.stringify(b)});form.reset();document.getElementById('modal')?.classList.remove('open');toast('Request sent. Revolt AutoLink will review it.');window.renderSecureVehicle();if(d.conversation_id&&window.openSupportForConversation)setTimeout(()=>openSupportForConversation(d.conversation_id,'My Vehicle support'),250)}catch(x){toast(x.message)}};
+// Rich dashboard includes requests awaiting admin approval as well as activated vehicles.
+const _oldDashboard=dashboard;
+dashboard=async function(){let [vehicles,requests]=await Promise.all([ownApi('/api/ownership/vehicles'),ownApi('/api/ownership/my-requests')]);let pending=requests.filter(r=>r.status!=='Completed').map(r=>`<div class="mv-request-status"><div><small>MY VEHICLE REQUEST</small><b>${escv(r.vehicle_name)}</b><span>${escv(r.services||'My Vehicle setup')}</span></div><span class="status">${escv(r.status)}</span></div>`).join('');return shell(`<div class="secure-toolbar"><div><b>Ownership dashboard</b><span>PIN-secured session</span></div><div><button class="btn ghost" onclick="requestMyVehicle()">＋ Add Vehicle</button><button class="btn ghost" onclick="vehicleResetStartFromDashboard()">Reset PIN</button><button class="btn dark" onclick="lockMyVehicle()">Lock</button></div></div>${pending?`<div class="mv-request-list"><h3>Setup Requests</h3>${pending}</div>`:''}<div class="ownership-flow"><span>Vehicle registered</span><i>→</i><span>Tracker</span><i>→</i><span>Insurance & documents</span><i>→</i><span>Maintenance & reminders</span></div>${vehicles.length?vehicles.map(ownedCard).join(''):`<div class="panel empty ownership-empty"><h2>No activated vehicle yet</h2><p>If you have already submitted a request, its review status appears above. Once Admin approves and registers the vehicle, the complete ownership dashboard will appear here automatically.</p><button class="btn primary" onclick="requestMyVehicle()">Add Your Vehicle to My Vehicle</button></div>`}`)};
+})();
